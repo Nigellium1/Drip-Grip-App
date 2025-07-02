@@ -20,9 +20,10 @@ async function getIP() {
 }
 
 async function getDailyData(node: number, setData: (data: { time: number; litresLost: number }[]) => void) {
-  const currentTime = Date.now();
-  /* const currentTime = 1741901325; */
-  const startTime = currentTime - 86400000;
+  const currentTime = Date.now() / 1000;
+  /* const currentTime = 1751447376; */
+  console.log(currentTime)
+  const startTime = currentTime - 86400;
   const ip = await getIP();
   const url = `http://${ip}:5000/graph?node=${node}&startTime=${startTime}&endTime=${currentTime}`;
   try {
@@ -35,17 +36,18 @@ async function getDailyData(node: number, setData: (data: { time: number; litres
     }));
     const litresLost = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     formatted.forEach((item: any) => {
-      const hour = Math.floor((item.time - startTime) / 3600000);
+      const hour = Math.floor((item.time - startTime) / 3600);
       litresLost[hour] = litresLost[hour] + item.flowrate * (5 / 60);
     });
-    const hourValues = [24];
-    for (let i = 0; i < 24; i++) {
-      hourValues[i] = currentTime - i * 3600000;
+    const hourValues: number[] = [];
+    for (let i = 23; i >= 0; i--) {
+      hourValues.push(currentTime - i * 3600);
     }
     const returnData = hourValues.map((time, i) => ({
       time,
       litresLost: litresLost[i],
     }));
+    console.log(url);
     setData(returnData);
   } catch (error) {
     console.error("Fetch error:", error);
@@ -53,7 +55,7 @@ async function getDailyData(node: number, setData: (data: { time: number; litres
   }
 }
 async function getMonthlyData(node: number, setData: (data: { time: number; litresLost: number }[]) => void) {
-  const currentTime = Date.now();
+  const currentTime = Date.now() / 1000;
   /* const currentTime = 1741901325; */
   const startTime = currentTime - 2419200;
   const ip = await getIP();
@@ -101,16 +103,32 @@ export default function DataScreen() {
   const tickCount = getOptimalTickCount(fontSize);
 
   useEffect(() => {
-    getDailyData(1,setDailyData1);
+    getDailyData(1, setDailyData1);
+    const interval = setInterval(() => {
+      getDailyData(1, setDailyData1);
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
   useEffect(() => {
-    getMonthlyData(1,setMonthlyData1);
+    getMonthlyData(1, setMonthlyData1);
+    const interval = setInterval(() => {
+      getMonthlyData(1, setMonthlyData1);
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
   useEffect(() => {
-    getDailyData(4,setDailyData2);
+    getDailyData(4, setDailyData2);
+    const interval = setInterval(() => {
+      getDailyData(4, setDailyData2);
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
   useEffect(() => {
-    getMonthlyData(4,setMonthlyData2);
+    getMonthlyData(4, setMonthlyData2);
+    const interval = setInterval(() => {
+      getMonthlyData(4, setMonthlyData2);
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -125,11 +143,16 @@ export default function DataScreen() {
             xAxis={{
               font,
               tickCount: tickCount,
-              formatXLabel: (value: number) =>
-                new Date(value).toLocaleTimeString([], { hour: 'numeric', hour12: true }).replace(/\s(?=[AP]M)/i, ''),
+              formatXLabel: (value: number) => {
+                const date = new Date(value*1000);
+                const hour = date.getHours();
+                const suffix = hour >= 12 ? 'PM' : 'AM';
+                const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+                return `${hour12}${suffix}`;
+              }
             }}
             axisOptions={{ font }}
-            domainPadding={{ top: 10, bottom: 10, right: 10 }}
+            domainPadding={{ top: 10, bottom: 10, right: 40 }}
           >
             {({ points }) => (
               <Line
@@ -187,8 +210,13 @@ export default function DataScreen() {
             xAxis={{
               font,
               tickCount: tickCount,
-              formatXLabel: (value: number) =>
-                new Date(value).toLocaleTimeString([], { hour: 'numeric', hour12: true }).replace(/\s(?=[AP]M)/i, ''),
+              formatXLabel: (value: number) => {
+                const date = new Date(value*1000);
+                const hour = date.getHours();
+                const suffix = hour >= 12 ? 'PM' : 'AM';
+                const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+                return `${hour12}${suffix}`;
+              }
             }}
             axisOptions={{ font }}
             domainPadding={{ top: 10, bottom: 10, right: 10 }}

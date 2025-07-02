@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#000"
+    backgroundColor: "#fff"
   },
   text: {
     flex: 1,
@@ -43,9 +43,13 @@ export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<
     { id: string; message: string; time: Date }[]
   >([]);
-
+-
   useEffect(() => {
     getData(setNotifications);
+    const interval = setInterval(() => {
+      getData(setNotifications);
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   async function deleteNotification(id: string) {
@@ -80,7 +84,7 @@ export default function NotificationsScreen() {
   }
   else
     return (
-      <ScrollView style = {{backgroundColor: "#fff"}}>
+      <ScrollView style={{ backgroundColor: "#fff" }}>
         {notifications.map((notification) => (
           <View key={notification.id} style={styles.notificationContainer}>
             <Text style={styles.text}>
